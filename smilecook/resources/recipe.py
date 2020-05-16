@@ -1,4 +1,6 @@
-from flask import request
+import sys
+import json
+from flask import request, jsonify
 from flask_restful import Resource
 from http import HTTPStatus
 from models.recipe import Recipe, recipe_list
@@ -7,12 +9,14 @@ from models.recipe import Recipe, recipe_list
 class RecipeListResource(Resource):
 
     def get(self):
+
         data = []
         for recipe in recipe_list:
             if recipe.is_publish is True:
                 data.append(recipe)
 
         return {'data': data}, HTTPStatus.OK
+
 
     def post(self):
 
@@ -34,10 +38,10 @@ class RecipeResource(Resource):
 
     def get(self, recipe_id):
 
-        recipe = next((dish for dish in recipe_list if dish['recipe_id'] == recipe_id and dish.is_publish == True), None)
+        recipe = next((dish for dish in recipe_list if dish.id == recipe_id and dish.is_publish is True), None)
 
         if recipe is None:
-            return {'message':'recipe not found'}, HTTPStatus.NOT_FOUND
+            return {'message': 'recipe not found'}, HTTPStatus.NOT_FOUND
 
         return recipe.data, HTTPStatus.OK
 
@@ -45,7 +49,7 @@ class RecipeResource(Resource):
 
         data = request.get_json()
 
-        recipe = next((dish for dish in recipe_list if dish['recipe_id'] == recipe_id), None)
+        recipe = next((dish for dish in recipe_list if dish.id == recipe_id), None)
 
         if recipe is None:
             return {'message', 'Recipe not found'}, HTTPStatus.NOT_FOUND
@@ -63,25 +67,31 @@ class RecipePublish(Resource):
 
     def put(self, recipe_id):
 
-        recipe = next((dish for dish in recipe_list if dish[recipe_id] == recipe_id), None)
+        recipe_update = ""
 
-        if recipe is None:
+        print(list(recipe_list))
+
+        for dish in list(recipe_list):
+            if dish.id == recipe_id:
+                recipe_update = dish
+
+        if recipe_update is None:
             return {'message': 'Recipe not found'}, HTTPStatus.NOT_FOUND
 
-        recipe.is_publish = True
+        recipe_update.is_publish = True
 
-        return {}, HTTPStatus.NO_CONTENT
+        return {'message': 'Recipe published'}, HTTPStatus.NO_CONTENT
 
     def delete(self, recipe_id):
 
-        recipe = next((dish for dish in recipe_list if dish[recipe_id] == recipe_id), None)
+        recipe = next((dish for dish in recipe_list if dish.id == recipe_id), None)
 
         if recipe is None:
             return {'message': 'Recipe not found'}, HTTPStatus.NOT_FOUND
 
         recipe.is_publish = False
 
-        return {}, HTTPStatus.NO_CONTENT
+        return {'message': 'Recipe Unpublished'}, HTTPStatus.NO_CONTENT
 
 
 
